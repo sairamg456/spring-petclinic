@@ -8,6 +8,9 @@ pipeline {
     triggers {
         pollSCM('* * * * *')
     }
+    parameters {
+        choice(name: 'GOAL', choices: ['package', 'clean package', 'install', 'clean install'], description: 'this is mvn package')
+    }
     tools {
         jdk 'JDK_17'
     }
@@ -21,7 +24,7 @@ pipeline {
     
         stage ('build and package') {
             steps {
-                sh script: 'mvn package'
+                sh script: "mvn ${params.GOAL}"
             }
         }
         stage ('reporting') {
@@ -30,6 +33,18 @@ pipeline {
                 junit testResults: '**/target/surefire-reports/TEST-*.xml'
             }
 
+        }
+    }
+    post {
+        success {
+            mail subject: "${JOB_NAME} is effective",
+                 body: "your project is effective and Build Url ${BUILD_URL}",
+                 to: 'all@jenkins.com'
+        }
+        failure {
+            mail subject: "${JOB_NAME} is deffective",
+                 body: "your project is effective and Build Url ${BUILD_URL}",
+                 to: 'all@jenkins.com'
         }
     }
 }
